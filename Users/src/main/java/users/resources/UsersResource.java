@@ -1,66 +1,65 @@
 package users.resources;
 
-import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
-import io.dropwizard.auth.Auth;
-import io.dropwizard.hibernate.UnitOfWork;
-import io.dropwizard.jersey.params.LongParam;
-import users.api.UsersApi;
-import users.core.Session;
-import users.core.User;
-import users.db.UserDAO;
-import users.influx.InfluxDataBase;
-import users.influx.Log;
-import users.rabbit.RPCClient;
-import users.rabbit.Send;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.influxdb.InfluxDB;
+import org.bson.Document;
 
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.gson.Gson;
+import com.mongodb.BasicDBObject;
+import com.mongodb.client.MongoCollection;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.POST;
-
-import com.google.common.base.Optional;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import io.dropwizard.hibernate.UnitOfWork;
+import users.core.User;
+import users.db.MongoService;
+import users.influx.InfluxDataBase;
 
 @Path("/users")
 @Produces(MediaType.APPLICATION_JSON)
-
 public class UsersResource {
 	
-	private final UserDAO userDao;
+	private MongoCollection<Document> collection;
+    private final MongoService mongoService;
 	private InfluxDataBase influx;
     
-    public UsersResource(UserDAO userDao, InfluxDataBase influx) {
-        this.userDao = userDao;
-        this.influx = influx;
+    public UsersResource(MongoCollection<Document> collection, MongoService mongoService, InfluxDataBase influx) {
+    	this.collection = collection;
+        this.mongoService = mongoService;
+    	this.influx = influx;
     }
     
     @GET
     @Path("/{id}")
     @UnitOfWork
-    public String findById(@PathParam("id") LongParam id) throws Exception {
-    	String response = null;
+    public String findById(@PathParam("id") int id) throws Exception {
+    	
+    	System.out.println(String.format(" ID to find in database:%s", id));
+    	Document user = mongoService.findById(collection, id);
+    	if (user != null) {
+    		ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        	String json = ow.writeValueAsString(user);
+        	return json;
+    	} else {
+    		return String.format("User with ID %s not found", id);
+    	}
+    	
+    	/*
+        String response = null;
     	try (RPCClient rpcClient = new RPCClient()) {
     		String i_str = Long.toString(id.get());
             System.out.println(" [x] Requesting kudos(" + i_str + ")");
@@ -69,9 +68,9 @@ public class UsersResource {
             
             response = response.replaceAll("Document", "kudo");
             
-            Optional<User> preview =  userDao.findById(id.get());
-        	User user = preview.get();
-        	user.setKudosList(response);
+            List<Document> preview  =  mongoService.findById(collection, id.get());
+        	Document user = preview.get(0);
+        	//user.setKudosList(response);
         	
         	ArrayList<Object> resp = new ArrayList<Object>();
         	//JsonObject jsonObject = new JsonParser().parse("\"kudos\":"+response).getAsJsonObject();
@@ -91,75 +90,81 @@ public class UsersResource {
             influx.insert("User Get By ID Error: "+e);
             return null;
         }
-    	
-    	
-    	
+    	*/
     }
     
     @GET
+    @Path("/allUsers")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @UnitOfWork
-    public List<User> findByName(@QueryParam("firstName") Optional<String> firstName, 
-    		@QueryParam("nickname") Optional<String> nickname) {
-        
-    	if (firstName.isPresent() && nickname.isPresent()) {
-    		influx.insert("User Get By First Name && Nickname: "+firstName.get()+"     "+nickname.get());
-    		return userDao.findByFirstNameNickname(firstName.get(),nickname.get());
-        }
-    	else {
-    		influx.insert("User Get All");
-    		return userDao.findAll();
-    	}
-    	
-        
+    public Response getAllUsers(
+    		@QueryParam("pagenumber") int pageNumber,
+    		@QueryParam("pagesize") int pageSize) throws Exception {
+    	List<Document> documents = mongoService.findSimple(collection, pageNumber ,pageSize);
+        influx.insert("Users: Get All Simple Users");
+        return Response.ok(documents).build();
     }
     
+
     @GET
-    @Path("/simple")
+    @Path("/searchUsers")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @UnitOfWork
-    public List<User> findAllSimple() throws Exception {
-    	/*
-    	Send send = new Send();
-    	try {
-			send.sendMessage();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-    	
-    	
-    	influx.insert("User Get Simple");
-        return userDao.findAllSimple();
+    public Response findByName(
+    		@QueryParam("firstName") String firstName, 
+    		@QueryParam("nickname")  String nickname,
+    		@QueryParam("pagenumber") int pageNumber,
+    		@QueryParam("pagesize") int pageSize) {
+        
+    	influx.insert(String.format("User Get By First Name OR Nickname: %s %s", firstName, nickname));
+    	List<Document> documents = mongoService.findByNameOrNickname(collection, firstName, nickname, pageNumber, pageSize);
+    	return Response.ok(documents).build();
     }
     
     
     @POST
+    @Path("/createUser")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @UnitOfWork
-    public boolean insertUser(
+    public Response insertUser(
     		@FormParam("nickname") String nickname,
+    		@FormParam("username") String userName,
     		@FormParam("firstName") String firstName,
-    		@FormParam("lastName") String lastName,
-    		@FormParam("username") String username,
-    		@FormParam("password") String password
-    		
+    		@FormParam("lastName") String lastName
     		) {
-       
-    	influx.insert("User Created: "+username);
-        return userDao.insertUser(nickname, firstName, lastName, username, password);
+          	
+    	System.out.println(" Testing create user endpoint...");
+    	Gson gson = new Gson();
+        String json = gson.toJson(
+        		new User(mongoService.getNextSequence(collection),nickname, userName, firstName, lastName));
+        System.out.println(" Converting to json: " + json.toString());
+        mongoService.insertOne(collection, new Document(BasicDBObject.parse(json)));
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User created successfully");
+        
+        /*SendCalculateKudos calculateKudos = new SendCalculateKudos();
+        calculateKudos.sendMessage(Long.valueOf(kudo.getDestino()));
+        */
+        influx.insert("User Created: "+json);
+        return Response.ok(response).build();
+      
     }
     
     @DELETE
-    @Path("/{id}")
+    @Path("delete/{id}")
     @UnitOfWork
-    public boolean deleteUserById(@PathParam("id") LongParam id) throws Exception {
-    	boolean resp = userDao.deleteUserById(id.get());
-    	if (resp=true) {
+    public Response deleteUserById(@PathParam("id") int id) throws Exception {
+    	mongoService.deleteOneByObjectId(collection, id);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User deleted successfully");
+        influx.insert("User Deleted: "+id);
+        return Response.ok(response).build();
+        /*if (resp=true) {
     		Send send = new Send();
     		send.sendMessage(id.get());
     		influx.insert("User Deleted:"+ id.get());
     	}
-    	return resp;
+    	return resp;*/
     }
 
 }

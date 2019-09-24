@@ -9,14 +9,21 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import users.auth.UserAuthenticator;
-//import users.auth.UserAuthorizer;
 import users.core.Session;
 import users.core.User;
+import users.db.MongoManaged;
+import users.db.MongoService;
 import users.db.UserDAO;
 import users.influx.InfluxDataBase;
 import users.rabbit.Send;
 import users.resources.UsersResource;
+
+import org.bson.Document;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 public class UsersApplication extends Application<UsersConfiguration> {
 
@@ -24,18 +31,11 @@ public class UsersApplication extends Application<UsersConfiguration> {
         new UsersApplication().run(args);
     }
     
-    private final HibernateBundle<UsersConfiguration> hibernateBundle =
-            new HibernateBundle<UsersConfiguration>(User.class) {
-                @Override
-                public DataSourceFactory getDataSourceFactory(UsersConfiguration configuration) {
-                    return configuration.getDataSourceFactory();
-                }
-            };
-
+    
 
     @Override
     public void initialize(final Bootstrap<UsersConfiguration> bootstrap) {
-    	bootstrap.addBundle(hibernateBundle);
+    //	bootstrap.addBundle(hibernateBundle);
     	
     }
     
@@ -44,28 +44,22 @@ public class UsersApplication extends Application<UsersConfiguration> {
     public void run(final UsersConfiguration configuration,
                     final Environment environment) throws Exception {
     	
-    	/*
-    	final UsersResource resource = new UsersResource(
-    	        configuration.getTemplate(),
-    	        configuration.getDefaultName()
-    	    );
-    	    environment.jersey().register(resource);
-    	    */
-    	
-    	final UserDAO userDao = new UserDAO(hibernateBundle.getSessionFactory());
-    	final InfluxDataBase influx = new InfluxDataBase(configuration.getInfluxHost(), configuration.getInfluxDataBase());
-    	
-    	
-    	environment.jersey().register(new UsersResource(userDao,influx));
-    	
-    	environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<Session>()
-                .setAuthenticator(new UserAuthenticator(userDao))
-                //.setAuthorizer(new UserAuthorizer())
-                .setRealm("SUPER SECRET STUFF")
-                .buildAuthFilter()));
-    	environment.jersey().register(new AuthValueFactoryProvider.Binder<>(Session.class));
-    	environment.jersey().register(RolesAllowedDynamicFeature.class);
-    	
+    	// Mongo for Users
+    	MongoClient mongoClient = new MongoClient(configuration.getMongoHost(), configuration.getMongoPort());
+        MongoManaged mongoManaged = new MongoManaged(mongoClient);
+        environment.lifecycle().manage(mongoManaged);
+        MongoDatabase db = mongoClient.getDatabase(configuration.getMongoDB());
+        MongoCollection<Document> collection = db.getCollection(configuration.getCollectionName());
+       
+        final InfluxDataBase influx = new InfluxDataBase(configuration.getInfluxHost(), configuration.getInfluxDataBase());
+        
+        UsersResource resource = new UsersResource(collection, new MongoService(), influx);
+        environment.jersey().register(new UsersResource(collection, new MongoService(), influx));
+        
+        /*RPCServer rpc = new RPCServer(resource);
+        ReceiverDeleteKudos recv =  new ReceiverDeleteKudos(resource);
+        rpc.start();
+        recv.start();*/
     }
 
 }

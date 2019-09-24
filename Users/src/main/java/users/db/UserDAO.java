@@ -9,8 +9,6 @@ import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.customizers.Mapper;
 
 import com.google.common.base.Optional;
-import com.sun.tools.sjavac.Log;
-
 import io.dropwizard.hibernate.AbstractDAO;
 import users.core.User;
 
@@ -44,7 +42,7 @@ public class UserDAO extends AbstractDAO<User>{
 		List<Object[]> results = list(namedQuery("kudos.core.User.simpleUsers"));
 		List<User> resp = new ArrayList<User>();
 		for (Object[] array : results) {
-			resp.add(new User((long)array[0], (String)array[1], (int)array[2]));
+			//resp.add(new User((long)array[0], (String)array[1], (int)array[2]));
 		}
 		
 		return resp;
