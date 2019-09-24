@@ -1,0 +1,9 @@
+kudos\resources\KudosResource.class
+kudos\influx\InfluxDataBase.class
+kudos\influx\Log.class
+kudos\rabbit\SendCalculateKudos.class
+kudos\core\Kudo.class
+kudos\rabbit\RPCServer.class
+kudos\rabbit\ReceiverDeleteKudos.class
+kudos\KudosConfiguration.class
+kudos\KudosApplication.class

@@ -1,0 +1,10 @@
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\db\KudoDao.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\KudosConfiguration.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\KudosApplication.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\influx\Log.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\rabbit\RPCServer.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\influx\InfluxDataBase.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\rabbit\SendCalculateKudos.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\rabbit\ReceiverDeleteKudos.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\resources\KudosResource.java
+D:\Osmar\Master Ing Software\Base de datos\7\Kudos\src\main\java\kudos\core\Kudo.java
