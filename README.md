@@ -8,12 +8,9 @@
 
 Kudos service was developed with DropWizard and Java. It uses Cassandra. The following end-points were developed for this service.
 
--   POST /kudos/createkudo
--   GET /kudos
--   GET /kudos/simpleKudos
--   GET /kudos/destino/{id}
--   DELETE /kudos/{id}
--   DELETE /kudos/user/{id}
+- POST /kudos/createkudo
+- DELETE /kudos/deleteKudo/{id}
+- GET /kudos/allKudos 	with "page" and "size" query parameters.
 
 ### [](https://github.com/osumasum1/KudosProject#rabbitmq)RabbitMQ
 
