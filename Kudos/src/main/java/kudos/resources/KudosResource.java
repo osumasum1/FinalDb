@@ -55,6 +55,7 @@ public class KudosResource {
     	Gson gson = new Gson();
     	String json = gson.toJson(kudo);
     	
+    	influx.insert("[Create Kudo] Kudo creado ");
     	return Response.ok(json).build();
     }
     
@@ -67,6 +68,7 @@ public class KudosResource {
     	
     	Map<String, String> response = new HashMap<>();
         response.put("message", "Kudo deleted successfully");
+        influx.insert("[Delete Kudo] Kudo Eliminado "+id);// [1/1/2018 10:20:30] [Delete User] Eliminado usuario 10
         return Response.ok(response).build();
     }
     
@@ -83,9 +85,11 @@ public class KudosResource {
     	
     	if (page.isPresent() && size.isPresent()) {
     		resp1 = kudoDao.getAllKudosPagination(size.get(), page.get());
+    		influx.insert("[Get Kudos] Kudos conseguidos para la pagina"+page +" de tamano "+size);
     		return Response.ok(resp1).build();
     	}
     	else {
+    		influx.insert("[GET Kudo] Kudos recuperados");
     		return Response.ok(resp).build();
     	}
     	

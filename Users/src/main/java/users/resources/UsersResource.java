@@ -101,7 +101,7 @@ public class UsersResource {
     		@QueryParam("pagenumber") int pageNumber,
     		@QueryParam("pagesize") int pageSize) throws Exception {
     	List<Document> documents = mongoService.findSimple(collection, pageNumber ,pageSize);
-        influx.insert("Users: Get All Simple Users");
+        influx.insert("[Get All Users] Kudos conseguidos");
         return Response.ok(documents).build();
     }
     
@@ -118,6 +118,7 @@ public class UsersResource {
         
     	influx.insert(String.format("User Get By First Name OR Nickname: %s %s", firstName, nickname));
     	List<Document> documents = mongoService.findByNameOrNickname(collection, firstName, nickname, pageNumber, pageSize);
+    	influx.insert("[Get All Users] search users: page="+pageNumber+" size="+pageSize+" firstName="+firstName+" nickName="+nickname);
     	return Response.ok(documents).build();
     }
     
@@ -145,7 +146,7 @@ public class UsersResource {
         /*SendCalculateKudos calculateKudos = new SendCalculateKudos();
         calculateKudos.sendMessage(Long.valueOf(kudo.getDestino()));
         */
-        influx.insert("User Created: "+json);
+        influx.insert("[Get All Users] User Created: "+json);
         return Response.ok(response).build();
       
     }
@@ -157,7 +158,7 @@ public class UsersResource {
     	mongoService.deleteOneByObjectId(collection, id);
         Map<String, String> response = new HashMap<>();
         response.put("message", "User deleted successfully");
-        influx.insert("User Deleted: "+id);
+        influx.insert("[Delete User] User Deleted: "+id);
         return Response.ok(response).build();
         /*if (resp=true) {
     		Send send = new Send();
