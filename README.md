@@ -35,6 +35,3 @@ Users service was developed with DropWizard and Java. It uses MongoDB. The follo
 InfluxDB was used to store a log with the resources that were called by the user.
 
 
-### [](https://github.com/osumasum1/KudosProject#influxdb-2)InfluxDB
-
-InfluxDB was used to store a log with the resources that were called by the user.
