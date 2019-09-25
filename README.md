@@ -12,11 +12,6 @@ Kudos service was developed with DropWizard and Java. It uses Cassandra. The fol
 - DELETE /kudos/deleteKudo/{id}
 - GET /kudos/allKudos 	with "page" and "size" query parameters.
 
-### [](https://github.com/osumasum1/KudosProject#rabbitmq)RabbitMQ
-
--   Messaging - pattern reply-correlation pattern was used to send the kudos of the user to Users service. The server is located in Kudos service.
--   Point-to-point pattern used to delete all kudos of a user that was deleted. Receiver is located in Kudos.
--   Point-to-point pattern used to request the calculation of kudos of a user. Sender is located in Kudos.
 
 ### [](https://github.com/osumasum1/KudosProject#influxdb)InfluxDB
 
@@ -34,25 +29,11 @@ Users service was developed with DropWizard and Java. It uses MongoDB. The follo
 -  GET /users/searchUsers?pagenumber=1&pagesize=3&nickname=liam&firstName=reina
 -   DELETE /users/{id}
 
-### [](https://github.com/osumasum1/KudosProject#rabbitmq-1)RabbitMQ
-
--   Messaging - pattern reply-correlation pattern was used to receive all kudos of a user from Kudos service. The client is located in users service.
--   Point-to-point pattern used to delete all kudos of a user that was deleted. Sender is located in Users.
 
 ### [](https://github.com/osumasum1/KudosProject#influxdb-1)InfluxDB
 
 InfluxDB was used to store a log with the resources that were called by the user.
 
-## [](https://github.com/osumasum1/KudosProject#stats-service)Stats Service
-
-Stats service was developed with DropWizard and Java. It uses MYSQL DB and Mongo. These DBs are the same that users and kudos services are usinng. The following end-points were developed fot this service.
-
--   GET /stats/kudos/{id}
--   PUT /stats
-
-### [](https://github.com/osumasum1/KudosProject#rabbitmq-2)RabbitMQ
-
--   Point-to-point pattern used to calculated the kudos of a user. Receiver is located in Stats.
 
 ### [](https://github.com/osumasum1/KudosProject#influxdb-2)InfluxDB
 
