@@ -1,4 +1,4 @@
-# Final Proyect
+# Final Project
 
 ## [](https://github.com/osumasum1/FinalDB#diagram)Diagram
 
@@ -6,7 +6,7 @@
 
 ## [](https://github.com/osumasum1/FinalDB#kudos-service)Kudos Service
 
-Kudos service was developed with DropWizard and Java. It uses Cassandra. The following end-points were developed fot this service.
+Kudos service was developed with DropWizard and Java. It uses Cassandra. The following end-points were developed for this service.
 
 -   POST /kudos/createkudo
 -   GET /kudos
@@ -27,7 +27,7 @@ InfluxDB was used to store a log with the resources that were called by the user
 
 ## [](https://github.com/osumasum1/KudosProject#users-service)Users Service
 
-Users service was developed with DropWizard and Java. It uses MongoDB. The following end-points were developed fot this service.
+Users service was developed with DropWizard and Java. It uses MongoDB. The following end-points were developed for this service.
 
 -   GET /users/{id}
 -   GET /users/
